@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Verificador de Números Felizes</title>
+  <style>
+    :root{
+      --primary:#2563eb;
+      --accent:#10b981;
+      --danger:#ef4444;
+      --bg:#0b1020;
+      --card:#0f172a;
+      --text:#e5e7eb;
+      --muted:#94a3b8;
+      --border:#1f2a44;
+      --chip:#1e293b;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      background: radial-gradient(1200px 800px at 10% -10%, #1d2750 0%, var(--bg) 45%) fixed;
+      color:var(--text);
+      display:flex;align-items:center;justify-content:center;padding:24px;
+    }
+    .app{
+      width:min(960px, 100%);
+      background:linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+      border:1px solid var(--border);
+      border-radius:20px;
+      box-shadow:0 20px 60px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.02);
+      padding:28px;
+      backdrop-filter: blur(6px);
+    }
+    header{
+      display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap
+    }
+    h1{font-size:1.6rem;margin:0;letter-spacing:.3px}
+    .badges{display:flex;gap:8px;flex-wrap:wrap}
+    .badge{
+      font-size:.78rem;padding:6px 10px;border-radius:999px;border:1px solid var(--border);background:var(--chip);color:var(--muted)
+    }
+    .tabs{display:flex;gap:8px;margin:18px 0}
+    .tab-btn{
+      background:#0b1227;border:1px solid var(--border);color:var(--text);
+      padding:10px 14px;border-radius:12px;cursor:pointer;font-weight:600;
+      transition:transform .06s ease, border-color .2s ease, background .2s ease;
+    }
+    .tab-btn[aria-selected="true"]{border-color:#3b82f6;background:#0b1a3a}
+    .grid{display:grid;grid-template-columns:1.2fr .8fr;gap:18px}
+    @media (max-width:860px){.grid{grid-template-columns:1fr}}
+    .card{
+      background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px 16px 18px;
+    }
+    .card h2{margin:0 0 12px;font-size:1.05rem;color:#cbd5e1}
+    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    input[type="number"]{
+      width:160px;background:#0b1227;color:var(--text);border:1px solid var(--border);
+      padding:10px 12px;border-radius:10px;outline:none;font-size:1rem;
+    }
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button{appearance:none;margin:0}
+    button.primary{
+      background:linear-gradient(180deg, #2e67ff, #1e40af);
+      color:white;border:none;padding:10px 14px;border-radius:10px;font-weight:700;cursor:pointer;
+      box-shadow:0 6px 18px rgba(46,103,255,.25);
+    }
+    button.primary:hover{filter:brightness(1.05)}
+    .switch{
+      display:flex;align-items:center;gap:8px;color:var(--muted);font-size:.9rem
+    }
+    .result{
+      margin-top:14px;padding:12px;border-radius:12px;border:1px dashed var(--border);
+      background:#0b1227;font-size:1rem;line-height:1.5;
+    }
+    .ok{color:var(--accent)}
+    .fail{color:#fca5a5}
+    .muted{color:var(--muted)}
+    .list{
+      display:flex;flex-wrap:wrap;gap:8px;margin-top:10px
+    }
+    .chip{
+      background:var(--chip);border:1px solid var(--border);color:#dbeafe;padding:6px 10px;border-radius:999px;font-size:.85rem
+    }
+    .steps{
+      margin-top:12px;padding-top:10px;border-top:1px dashed var(--border);font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, Liberation Mono, monospace;
+      font-size:.95rem;color:#cbd5e1;max-height:220px;overflow:auto;white-space:pre-wrap
+    }
+    .footer{
+      margin-top:12px;color:var(--muted);font-size:.85rem
+    }
+    .history{display:flex;flex-direction:column;gap:8px;max-height:220px;overflow:auto}
+    .history .item{
+      display:flex;justify-content:space-between;align-items:center;gap:8px;border:1px solid var(--border);
+      background:#0b1227;padding:10px;border-radius:10px
+    }
+    .history .item strong{letter-spacing:.2px}
+    .time{color:var(--muted);font-size:.8rem}
+    .right small{color:var(--muted)}
+    .range-controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .range-output{margin-top:10px}
+    .counter{margin-left:auto;color:#93c5fd;font-size:.9rem}
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+  </style>
+</head>
+<body>
+  <main class="app" role="main">
+    <header>
+      <h1>🧠 Verificador de Números Felizes</h1>
+      <div class="badges" aria-hidden="true">
+        <span class="badge">HTML • CSS • JS Vanilla</span>
+        <span class="badge">Client-side</span>
+        <span class="badge">Sem dependências</span>
+      </div>
+    </header>
+
+    <nav class="tabs" role="tablist" aria-label="Modos">
+      <button class="tab-btn" role="tab" id="tab-single" aria-selected="true" aria-controls="panel-single">Número único</button>
+      <button class="tab-btn" role="tab" id="tab-range" aria-selected="false" aria-controls="panel-range">Intervalo</button>
+      <span class="counter" id="memoCounter" title="Resultados em cache">cache: 0</span>
+    </nav>
+
+    <section class="grid">
+      <!-- LEFT -->
+      <div>
+        <!-- SINGLE -->
+        <div id="panel-single" class="card" role="tabpanel" aria-labelledby="tab-single">
+          <h2>Verificar um número</h2>
+          <div class="row" style="margin-bottom:10px">
+            <label class="sr-only" for="n">Número inteiro</label>
+            <input id="n" type="number" inputmode="numeric" min="1" placeholder="Ex.: 19" />
+            <button id="btnCheck" class="primary">Verificar</button>
+            <label class="switch"><input id="showSteps" type="checkbox" /> mostrar sequência</label>
+          </div>
+          <div id="singleResult" class="result muted">Digite um número inteiro positivo e clique em <strong>Verificar</strong>.</div>
+          <div id="singleSteps" class="steps" hidden></div>
+        </div>
+
+        <!-- RANGE -->
+        <div id="panel-range" class="card" role="tabpanel" aria-labelledby="tab-range" hidden>
+          <h2>Listar felizes em um intervalo</h2>
+          <div class="range-controls">
+            <label class="sr-only" for="rangeMax">Até (máx.)</label>
+            <input id="rangeMax" type="number" min="1" placeholder="Até... (ex.: 5000)" />
+            <button id="btnList" class="primary">Listar felizes</button>
+            <small class="muted">Sugestão: até 50.000 para boa performance.</small>
+          </div>
+          <div id="rangeResult" class="result muted">Informe um limite e clique em <strong>Listar felizes</strong>.</div>
+          <div id="rangeOutput" class="range-output list"></div>
+        </div>
+      </div>
+
+      <!-- RIGHT -->
+      <aside class="card" aria-label="Painel lateral">
+        <h2>Histórico (últimos 10)</h2>
+        <div id="history" class="history" aria-live="polite"></div>
+        <div class="footer">Resultados são armazenados localmente no seu navegador.</div>
+      </aside>
+    </section>
+
+    <div class="footer">
+      <span class="muted">Dica: um número é <em>feliz</em> se a soma dos quadrados de seus dígitos, aplicada repetidamente, chega a 1.</span>
+    </div>
+  </main>
+
+  <script>
+    // -------- Utilidades UI --------
+    const $ = (sel)=>document.querySelector(sel);
+    const byId = (id)=>document.getElementById(id);
+    const fmt = (n)=>new Intl.NumberFormat('pt-BR').format(n);
+    const now = ()=>new Date().toLocaleString('pt-BR');
+
+    // -------- Tabs --------
+    const tabSingle = byId('tab-single');
+    const tabRange = byId('tab-range');
+    const panelSingle = byId('panel-single');
+    const panelRange  = byId('panel-range');
+
+    function setTab(which){
+      const single = which === 'single';
+      tabSingle.setAttribute('aria-selected', single);
+      tabRange.setAttribute('aria-selected', !single);
+      panelSingle.hidden = !single;
+      panelRange.hidden  = single;
+    }
+    tabSingle.addEventListener('click', ()=>setTab('single'));
+    tabRange.addEventListener('click',  ()=>setTab('range'));
+
+    // -------- Algoritmo Happy Number --------
+    // Soma dos quadrados dos dígitos
+    function sumSqDigits(n){
+      let s = 0;
+      while(n>0){
+        const d = n % 10;
+        s += d*d;
+        n = (n/10)|0;
+      }
+      return s;
+    }
+
+    // Memoization para acelerar checagens em intervalo
+    const memo = new Map(); // n -> {happy:boolean, steps?:number}
+    const memoCounter = byId('memoCounter');
+    function bumpMemoBadge(){ memoCounter.textContent = `cache: ${memo.size}`; }
+
+    function isHappy(n, wantTrace=false){
+      if(n<=0 || !Number.isInteger(n)) return { ok:false, happy:false, steps:[], iterations:0 };
+
+      if(memo.has(n) && !wantTrace){
+        const m = memo.get(n);
+        return { ok:true, happy:m.happy, steps:[], iterations: m.iterations ?? 0 };
+      }
+
+      const seen = new Set();
+      const trace = wantTrace ? [n] : [];
+      let cur = n, it = 0;
+
+      while(cur !== 1 && !seen.has(cur)){
+        seen.add(cur);
+        cur = sumSqDigits(cur);
+        it++;
+        if(wantTrace) trace.push(cur);
+        if(memo.has(cur) && !wantTrace){
+          const m = memo.get(cur);
+          // Se já sabemos o destino de cur, herdamos
+          memo.set(n, { happy:m.happy, iterations: it + (m.iterations ?? 0) });
+          bumpMemoBadge();
+          return { ok:true, happy:m.happy, steps:[], iterations: it + (m.iterations ?? 0) };
+        }
+        // proteção leve (ciclos sempre se detectam antes, mas ok)
+        if(it>1000) break;
+      }
+
+      const happy = (cur===1);
+      memo.set(n, { happy, iterations:it });
+      bumpMemoBadge();
+      return { ok:true, happy, steps: wantTrace ? trace : [], iterations:it };
+    }
+
+    // -------- Histórico Local --------
+    const HIST_KEY = 'happy_history_v1';
+    function loadHistory(){
+      try{ return JSON.parse(localStorage.getItem(HIST_KEY) || '[]'); }catch{return []}
+    }
+    function saveHistory(items){
+      localStorage.setItem(HIST_KEY, JSON.stringify(items.slice(0,10)));
+    }
+    function addHistory(n, happy){
+      const items = loadHistory();
+      items.unshift({ n, happy, at: now() });
+      saveHistory(items);
+      renderHistory();
+    }
+    function renderHistory(){
+      const items = loadHistory();
+      const box = byId('history');
+      box.innerHTML = '';
+      if(items.length===0){
+        box.innerHTML = `<div class="muted">Sem histórico ainda.</div>`;
+        return;
+      }
+      for(const {n, happy, at} of items){
+        const div = document.createElement('div');
+        div.className = 'item';
+        div.innerHTML = `
+          <div class="left"><strong>${fmt(n)}</strong> <span class="${happy?'ok':'fail'}">• ${happy?'feliz':'infeliz'}</span></div>
+          <div class="right"><span class="time">${at}</span></div>
+        `;
+        box.appendChild(div);
+      }
+    }
+    renderHistory();
+
+    // -------- UI: Número único --------
+    const inputN = byId('n');
+    const btnCheck = byId('btnCheck');
+    const showSteps = byId('showSteps');
+    const singleResult = byId('singleResult');
+    const singleSteps  = byId('singleSteps');
+
+    function onCheckSingle(){
+      const raw = inputN.value.trim();
+      const n = Number(raw);
+      singleSteps.hidden = true;
+      singleSteps.textContent = '';
+
+      if(!raw){
+        singleResult.innerHTML = `Informe um número inteiro positivo.`;
+        singleResult.className = 'result muted';
+        return;
+      }
+      if(!Number.isFinite(n) || n<1 || !Number.isInteger(n)){
+        singleResult.innerHTML = `Valor inválido. Digite um <strong>inteiro positivo</strong>.`;
+        singleResult.className = 'result fail';
+        return;
+      }
+
+      const want = !!showSteps.checked;
+      const { ok, happy, steps, iterations } = isHappy(n, want);
+      if(!ok){
+        singleResult.textContent = `Não foi possível verificar.`;
+        singleResult.className = 'result fail';
+        return;
+      }
+
+      singleResult.innerHTML = `${fmt(n)} é <strong class="${happy?'ok':'fail'}">${happy ? 'um número feliz 🎉' : 'um número infeliz 😕'}</strong>` +
+        ` <span class="muted">(iterações: ${fmt(iterations)})</span>`;
+      singleResult.className = 'result';
+
+      if(want && steps.length){
+        const chain = steps.map((v,i)=>{
+          if(i===0) return `${v}`;
+          return `→ ${v}`;
+        }).join(' ');
+        singleSteps.textContent = chain;
+        singleSteps.hidden = false;
+      }
+
+      addHistory(n, happy);
+    }
+
+    btnCheck.addEventListener('click', onCheckSingle);
+    inputN.addEventListener('keydown', (e)=>{ if(e.key==='Enter') onCheckSingle(); });
+
+    // -------- UI: Intervalo --------
+    const rangeMax = byId('rangeMax');
+    const btnList = byId('btnList');
+    const rangeResult = byId('rangeResult');
+    const rangeOutput = byId('rangeOutput');
+
+    function onListRange(){
+      const raw = rangeMax.value.trim();
+      const max = Number(raw);
+      rangeOutput.innerHTML = '';
+      if(!raw){
+        rangeResult.innerHTML = `Informe um limite superior (ex.: 5000).`;
+        rangeResult.className = 'result muted';
+        return;
+      }
+      if(!Number.isFinite(max) || max<1 || !Number.isInteger(max)){
+        rangeResult.innerHTML = `Valor inválido. Use um <strong>inteiro positivo</strong>.`;
+        rangeResult.className = 'result fail';
+        return;
+      }
+      if(max>200000){
+        rangeResult.innerHTML = `Limite alto (${fmt(max)}). Para bom desempenho, tente ≤ 50.000. Continuando mesmo assim…`;
+        rangeResult.className = 'result';
+      }else{
+        rangeResult.innerHTML = `Buscando números felizes até <strong>${fmt(max)}</strong>…`;
+        rangeResult.className = 'result';
+      }
+
+      const t0 = performance.now();
+      const happies = [];
+      for(let i=1;i<=max;i++){
+        const { happy } = isHappy(i, false);
+        if(happy) happies.push(i);
+      }
+      const t1 = performance.now();
+
+      rangeResult.innerHTML = `Encontrados <strong>${fmt(happies.length)}</strong> números felizes ≤ ${fmt(max)} ` +
+        `<span class="muted">(${(t1-t0).toFixed(0)} ms)</span>`;
+      rangeOutput.innerHTML = happies.map(n=>`<span class="chip">${fmt(n)}</span>`).join(' ');
+    }
+
+    btnList.addEventListener('click', onListRange);
+    rangeMax.addEventListener('keydown', (e)=>{ if(e.key==='Enter') onListRange(); });
+
+    // inicial
+    bumpMemoBadge();
+  </script>
+</body>
+</html>
